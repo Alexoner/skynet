@@ -80,7 +80,7 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  num_train, D = X.shape
+  N, D = X.shape
   scores = X.dot(W) # N x C
 
   scores -= np.max(scores, axis=1, keepdims=True)
@@ -88,13 +88,13 @@ def softmax_loss_vectorized(W, X, y, reg):
   p /= np.sum(p, axis=1, keepdims=True)
 
   # cross-entropy loss
-  loss_data = -np.sum(np.log(p[range(y.size), y])) / num_train
+  loss_data = -np.sum(np.log(p[range(y.size), y])) / N
   loss_reg = 0.5 * reg * np.sum(W * W)
   loss = loss_data + loss_reg
 
   dscores = p
   dscores[range(y.size), y] -= 1.0
-  dW = X.T.dot(dscores) / num_train + reg * W
+  dW = X.T.dot(dscores) / N + reg * W
   pass
   #############################################################################
   #                          END OF YOUR CODE                                 #

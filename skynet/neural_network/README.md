@@ -97,6 +97,17 @@ working run the `collectSubmission.sh` script; this will produce a file called
 [the coursework](https://coursework.stanford.edu/portal/site/W15-CS-231N-01/)
 page for the course.
 
+### Q1: Two-layer Neural Network (30 points)
+
+The IPython Notebook `two_layer_net.ipynb` will walk you through implementing a two-layer neural network on CIFAR-10. You will write a hard-coded 2-layer Neural Network, implement its backprop pass, and tune its hyperparameters.
+
+### Q2: Modular Neural Network (30 points)
+
+The IPython Notebook `layers.ipynb` will walk you through a modular Neural Network implementation. You will implement the forward and backward passes of many different layer types, including convolution and pooling layers.
+
+### Q3: ConvNet on CIFAR-10 (40 points)
+
+The IPython Notebook `convnet.ipynb` will walk you through the process of training a (shallow) convolutional neural network on CIFAR-10. It wil then be up to you to train the best network that you can.
 
 ### Q1: Fully-connected Neural Network (30 points)
 The IPython notebook `FullyConnectedNets.ipynb` will introduce you to our
