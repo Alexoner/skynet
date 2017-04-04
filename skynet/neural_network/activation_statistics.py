@@ -17,7 +17,10 @@ def activation_statistics(init_func=lambda fan_in, fan_out: np.random.randn(fan_
     hidden_layer_sizes = [500]*10
     nonlinearities = [nonlinearity]*len(hidden_layer_sizes)
 
-    act = {'relu': lambda x: np.maximum(0,x), 'tanh': lambda x: np.tanh(x)}
+    activate_func = {
+        'relu': lambda x: np.maximum(0,x),
+        'tanh': lambda x: np.tanh(x),
+    }
     Hs = {}
     for i in range(len(hidden_layer_sizes)):
         X = D if i == 0 else Hs[i-1] # input at this layer
@@ -26,7 +29,7 @@ def activation_statistics(init_func=lambda fan_in, fan_out: np.random.randn(fan_
         W = init_func(fan_in, fan_out) # layer initialization
 
         H = np.dot(X, W) # matrix multiply
-        H = act[nonlinearities[i]](H) # nonlinearities
+        H = activate_func[nonlinearities[i]](H) # nonlinearities
         Hs[i] = H # cache result on this layer
 
     # look at the distribution at each layer

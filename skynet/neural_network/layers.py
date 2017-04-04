@@ -426,7 +426,7 @@ def conv_forward_naive(x, w, b, conv_param):
   Wo = 1 + (W + 2*pad - WW) / stride
   x_padded = np.pad(x, ((0,), (0,), (pad,), (pad,)), mode='constant', constant_values=(0, 0))
   out = np.zeros((N, F, Ho, Wo))
-  #n-th example
+  # n-th example
   for n in range(N):
       #f-th filter
       for f in range(F):
@@ -435,7 +435,7 @@ def conv_forward_naive(x, w, b, conv_param):
                   # sliding WINDOW forms arithmetic progression
                   Hw = i*stride
                   Ww = j*stride
-                  window = x_padded[n,:, Hw:Hw+HH, Ww:Ww+WW]
+                  window = x_padded[n, :, Hw:Hw+HH, Ww:Ww+WW]
                   # CONVOLVE
                   out[n,f,i,j] = np.sum(window * w[f]) + b[f]
   pass

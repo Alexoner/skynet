@@ -389,4 +389,264 @@ class FunConvNet(object):
       y_predict = np.argmax(scores, axis=-1)
       return y_predict
 
-pass
+
+class AntConvNet(object):
+
+  """
+  A convolutional network for fun, with the following architecture:
+
+  { conv - [spatial batch norm] - relu - 2x2 max pool } x N -
+  { [dropout] - affine - [relu] } x M -
+  affine -
+  softmax
+
+  The network operates on minibatches of data that have shape (N, C, H, W)
+  consisting of N images, each with height H and width W and with C input
+  channels.  """
+
+  def __init__(self, input_dim=(3, 32, 32),
+               conv_params=[{
+                   'num_filters': 32, 'filter_size': 7,
+               },
+               ],
+               hidden_dims=[100], num_classes=10,
+               dropout=0, use_batchnorm=False,
+               weight_scale=2e-2, reg=0.0,
+               dtype=np.float64, seed=None):
+    """
+    Initialize a new network.
+
+    Inputs:
+    - input_dim    : Tuple (C, H, W) giving size of input data
+    - conv_params  : convolutional layers parameters
+        - num_filters  : Number of filters to use in the convolutional layer
+        - filter_size : Sequence of size of filters to use in the convolutional layer
+        - stride : window moving stride
+        - pad: default (filter_size -1)/2 to preserve the previous dimension
+    - pool_params  : not exposed yet!
+    - hidden_dims  : A list of integers number of units to use in the
+      fully-connected hidden layer.
+    - num_classes : Number of scores to produce from the final affine layer.
+    - dropout     : Scalar between 0 and 1 giving dropout strength. If dropout=0 then
+      the network should not use dropout at all.Drop the neurons at a probability
+      of dropout argument.
+    - use_batchnorm : Whether or not the network should use batch normalization.
+    - weight_scale  : Scalar giving standard deviation for random initialization
+      of weights.
+    - reg   : Scalar giving L2 regularization strength
+    - dtype : numpy datatype to use for computation.
+    - seed  : If not None, then pass this random seed to the dropout layers. This
+      will make the dropout layers deteriministic so we can gradient check the
+      model.
+    """
+    self.params = {}
+
+    self.conv_params = conv_params
+    self.num_convs = len(conv_params)
+    self.hidden_dims = hidden_dims
+    # plus one last affine layer producing output scores
+    self.num_layers = self.num_convs + len(hidden_dims) + 1
+    self.reg = reg
+    self.use_batchnorm = use_batchnorm
+    self.use_dropout = dropout > 0
+
+    self.dtype = dtype
+
+    self.pool_params = [{'pool_height': 2, 'pool_width': 2, 'stride': 2}
+                        for l in range(self.num_convs)]
+
+    C, H, W = input_dim
+    for i in range(self.num_layers):
+      l1 = i + 1
+      # conv layers
+      if i < self.num_convs:
+        self.conv_params[i].setdefault('pad', (self.conv_params[i]['filter_size']-1 )/2)
+        self.conv_params[i].setdefault('stride', 1)
+
+        self.params['W%d' % l1] = weight_scale * np.random.randn(
+            self.conv_params[i]['num_filters'],
+            i and self.conv_params[i-1]['num_filters'] or C,
+            self.conv_params[i]['filter_size'],
+            self.conv_params[i]['filter_size']
+        )
+        self.params['b%d' % l1] = np.zeros((self.conv_params[i]['num_filters']))
+
+        if self.use_batchnorm:
+          self.params['gamma%d' % l1] = np.ones((self.conv_params[i]['num_filters']))
+          self.params['beta%d' % l1] = np.zeros((self.conv_params[i]['num_filters']))
+      # fully connected layers
+      elif i < self.num_layers - 1:
+        self.params['W%d' % l1] = weight_scale * np.random.randn(
+           i == self.num_convs and
+             self.conv_params[i-1]['num_filters'] * H * W * 2 ** (-2 * self.num_convs)
+             or self.hidden_dims[i - 1 - self.num_convs],
+           self.hidden_dims[i - self.num_convs])
+        self.params['b%d' % l1] = np.zeros(self.hidden_dims[i - self.num_convs])
+
+        if self.use_batchnorm:
+          self.params['gamma%d' % (i+1)] = np.ones((hidden_dims[i - self.num_convs]))
+          self.params['beta%d' % (i+1)] = np.zeros((hidden_dims[i - self.num_convs]))
+      # last affine layer
+      else:
+          self.params['W%d' % l1] = weight_scale * np.random.randn(
+              i == self.num_convs and self.conv_params[i-1]['num_filters'] * H * W
+              or self.hidden_dims[i - 1 - self.num_convs],
+              num_classes)
+          self.params['b%d' % l1] = np.zeros(num_classes)
+
+      pass
+
+    ############################################################################
+    #                             END OF YOUR CODE                             #
+    ############################################################################
+
+    # When using dropout we need to pass a dropout_param dictionary to each
+    # dropout layer so that the layer knows the dropout probability and the mode
+    # (train / test). You can pass the same dropout_param to each dropout layer.
+    self.dropout_param = {}
+    if self.use_dropout:
+      self.dropout_param = {'mode': 'train', 'p': dropout}
+      if seed is not None:
+        self.dropout_param['seed'] = seed
+
+    # With batch normalization we need to keep track of running means and
+    # variances, so we need to pass a special bn_param object to each batch
+    # normalization layer. You should pass self.bn_params[0] to the forward pass
+    # of the first batch normalization layer, self.bn_params[1] to the forward
+    # pass of the second batch normalization layer, etc.
+
+    self.bn_params = []
+    if self.use_batchnorm:
+      self.bn_params = [{'mode': 'train'} for i in range(self.num_layers - 1)]
+
+    for k, v in self.params.items():
+      self.params[k] = v.astype(dtype)
+
+
+  def loss(self, X, y=None):
+    """
+    Evaluate loss and gradient for the three-layer convolutional network.
+
+    Input / output: Same API as TwoLayerNet in fc_net.py.
+    """
+    X = X.astype(self.dtype)
+    mode = 'test' if y is None else 'train'
+
+    # Set train/test mode for batchnorm params and dropout param since they
+    # behave differently during training and testing.
+    if self.dropout_param is not None:
+      self.dropout_param['mode'] = mode
+    if self.use_batchnorm:
+      for bn_param in self.bn_params:
+        bn_param['mode'] = mode
+
+    scores = None
+    ############################################################################
+    # TODO: Implement the FORWARD pass for the three-layer convolutional net,  #
+    # computing the class scores for X and storing them in the scores          #
+    # variable.                                                                #
+    ############################################################################
+
+    # forward pass
+    a = []
+    cache = []
+    # out is the output of last preceding layer
+    out = X
+    for i in range(self.num_layers):
+      # using Hash Table to store layer cache data
+      a.append({})
+      cache.append({})
+      l1 = i + 1
+      # convolutional layers
+      if i < self.num_convs:
+        conv_param = self.conv_params[i]
+        pool_param = self.pool_params[i]
+
+        if self.use_batchnorm:
+          a[i]['conv'], cache[i]['conv'] = conv_bn_relu_pool_forward(
+              out, self.params['W%d' % (i+1)], self.params['b%d' % l1],
+              self.params['gamma%d' % (i+1)], self.params['beta%d' % (i+1)],
+              conv_param, self.bn_params[i], pool_param
+          )
+        else:
+          a[i]['conv'], cache[i]['conv'] = conv_relu_pool_forward(
+              out, self.params['W%d' % (i+1)], self.params['b%d' % l1],
+              conv_param, pool_param
+          )
+        out = a[i]['conv']
+      elif i < self.num_layers -1:
+        # fully-connected layers
+        if self.use_batchnorm:
+          a[i]['affine'], cache[i]['affine'] = affine_bn_relu_forward(
+            out, self.params['W%d' % l1], self.params['b%d' % l1],
+            self.params['gamma%d' % (i+1)], self.params['beta%d' % (i+1)], self.bn_params[i])
+        else:
+          a[i]['affine'], cache[i]['affine'] = affine_relu_forward(
+            out, self.params['W%d' % l1], self.params['b%d' % l1])
+        out = a[i]['affine']
+        # dropout
+        if self.use_dropout:
+          a[i]['dropout'], cache[i]['dropout'] = dropout_forward(out, self.dropout_param)
+          out = a[i]['dropout']
+      # last affine layer
+      else:
+        a[i]['affine'], cache[i]['affine'] = affine_forward(
+            out, self.params['W%d' % l1], self.params['b%d' % l1])
+        out = a[i]['affine']
+    scores = out
+    ############################################################################
+    #                             END OF YOUR CODE                             #
+    ############################################################################
+
+    if y is None:
+      return scores
+
+    # backward pass
+    loss, grads = 0, {}
+    loss_reg = 0.0
+
+    loss_data, dscores = softmax_loss(scores, y)
+    dout = dscores
+    for i in reversed(range(self.num_layers)):
+      l1 = i + 1
+      if i < self.num_convs:
+        if self.use_batchnorm:
+            (dout, grads['W%d' % l1], grads['b%d' % l1],
+             grads['gamma%d' % (i+1)], grads['beta%d' % (i+1)],) = conv_bn_relu_pool_backward(
+                 dout, cache[i]['conv']
+            )
+        else:
+          dout, grads['W%d' % l1], grads['b%d' % l1] = conv_relu_pool_backward(dout, cache[i]['conv'])
+      # fully-connected layers
+      elif i < self.num_layers - 1:
+        if self.use_dropout:
+          dout = dropout_backward(dout, cache[i]['dropout'])
+        if self.use_batchnorm:
+          (dout,
+           grads['W%d' % l1], grads['b%d' % l1],
+           grads['gamma%d' % (i+1)], grads['beta%d' % (i+1)],
+           ) = affine_bn_relu_backward(dout, cache[i]['affine'])
+        else:
+          (dout,
+           grads['W%d' % l1],
+           grads['b%d' % l1]) = affine_relu_backward(dout, cache[i]['affine'])
+      # last affine layer
+      else:
+        (dout,
+         grads['W%d' % l1],
+         grads['b%d' % l1]) = affine_backward(dout, cache[i]['affine'])
+
+      loss_reg += 0.5 * self.reg * np.sum(self.params['W%d' % l1] ** 2)
+      grads['W%d' % l1] += self.reg * self.params['W%d' % l1]
+
+    loss = loss_data + loss_reg
+    ############################################################################
+    #                             END OF YOUR CODE                             #
+    ############################################################################
+
+    return loss, grads
+
+  def predict(self, X):
+      scores = self.loss(X)
+      y_predict = np.argmax(scores, axis=-1)
+      return y_predict
