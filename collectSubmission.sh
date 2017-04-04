@@ -1,2 +1,2 @@
-rm -f assignment2.zip
-zip -r assignment2.zip . -x "*.git*" "*cs231n/datasets*" "*.ipynb_checkpoints*" "*README.md" "*collectSubmission.sh" "*requirements.txt" ".env/*" "*.pyc" "*cs231n/build/*"
+rm -f submission.zip
+zip -r submission.zip . -x "*.git*" "*skynet/datasets*" "*.ipynb_checkpoints*" "*README.md" "*collectSubmission.sh" "*requirements.txt" ".env/*" "*.pyc" "*skynet/build/*"

@@ -3,7 +3,7 @@ import urllib2, os, tempfile
 import numpy as np
 from scipy.misc import imread
 
-from cs231n.fast_layers import conv_forward_fast
+from skynet.neural_network.fast_layers import conv_forward_fast
 
 
 """

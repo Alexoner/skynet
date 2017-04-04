@@ -3,7 +3,7 @@ import numpy as np
 import h5py
 
 
-def load_coco_data(base_dir='cs231n/datasets/coco_captioning',
+def load_coco_data(base_dir='../skynet/datasets/coco_captioning',
                    max_train=None,
                    pca_features=True):
   data = {}

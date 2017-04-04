@@ -1,6 +1,6 @@
 import numpy as np
 
-from cs231n import optim
+from skynet.solvers import optimizer as optim
 
 
 class Solver(object):
@@ -263,4 +263,6 @@ class Solver(object):
 
     # At the end of training swap the best params into the model
     self.model.params = self.best_params
+    if self.verbose:
+      print 'finished optimization. best validation accuracy: %f' % (self.best_val_acc, )
 

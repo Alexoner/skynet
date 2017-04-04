@@ -1,8 +1,8 @@
 import numpy as np
 
-from cs231n.layers import *
-from cs231n.fast_layers import *
-from cs231n.layer_utils import *
+from skynet.neural_network.layers import *
+from skynet.neural_network.fast_layers import *
+from skynet.neural_network.layer_utils import *
 
 
 class ThreeLayerConvNet(object):

@@ -25,10 +25,10 @@ def svm_loss_naive(W, X, y, reg):
   num_classes = W.shape[1]
   num_train = X.shape[0]
   loss = 0.0
-  for i in xrange(num_train):
+  for i in range(num_train):
     scores = X[i].dot(W)
     correct_class_score = scores[y[i]]
-    for j in xrange(num_classes):
+    for j in range(num_classes):
       if j == y[i]:
         continue
       margin = scores[j] - correct_class_score + 1 # note delta = 1
@@ -88,7 +88,7 @@ def svm_loss_vectorized(W, X, y, reg):
   # to ignore the y-th position and only consider margin on max wrong class
   margins[np.arange(0, num_train), y] = 0
 
-  loss = np.sum(margins)
+  loss_cost = np.sum(margins)
   pass
   #############################################################################
   #                             END OF YOUR CODE                              #
@@ -116,14 +116,15 @@ def svm_loss_vectorized(W, X, y, reg):
 
   # Right now the loss is a sum over all training examples, but we want it
   # to be an average instead so we divide by num_train.
-  loss /= num_train
+  loss_cost /= num_train
+  loss = loss_cost
   dW /= num_train
 
   # Add regularization to the loss.
   # regularized term
-  RW = 0.5 * reg * np.sum(W * W)
-  dRW = 0.5 * reg * (2 * W)
-  loss += RW
-  dW += dRW
+  loss_reg = 0.5 * reg * np.sum(W * W)
+  dloss_reg_W = 0.5 * reg * (2 * W)
+  loss += loss_reg
+  dW += dloss_reg_W
 
   return loss, dW

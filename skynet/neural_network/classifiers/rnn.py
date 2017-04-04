@@ -1,7 +1,7 @@
 import numpy as np
 
-from cs231n.layers import *
-from cs231n.rnn_layers import *
+from skynet.neural_network.layers import *
+from skynet.neural_network.rnn.rnn_layers import *
 
 
 class CaptioningRNN(object):
