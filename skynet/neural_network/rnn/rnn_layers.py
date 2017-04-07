@@ -150,7 +150,7 @@ def rnn_backward(dh, cache):
   db = np.zeros((H, ))
 
   dh_prev = np.zeros((N, H))
-  for t in reversed(range(T)):
+  for t in reversed(list(range(T))):
     # XXX: don't mutate input parameters if we have to, for god's sake
     dh_t = dh[:, t, :] + dh_prev
     (dx[:, t, :], dh_prev, dWx_t, dWh_t, db_t) = \
@@ -434,7 +434,7 @@ def lstm_backward(dh, cache):
   dprev_h = np.zeros((N, H))
   dprev_c = np.zeros((N, H))
 
-  for t in reversed(range(T)):
+  for t in reversed(list(range(T))):
     dh_t = dh[:, t, :] + dprev_h
     dx[:, t, :], dprev_h, dprev_c, dWx_t, dWh_t, db_t = \
             lstm_step_backward(dh_t, dprev_c, cache[t])
@@ -540,7 +540,7 @@ def temporal_softmax_loss(x, y, mask, verbose=False):
   dx_flat /= N
   dx_flat *= mask_flat[:, None]
 
-  if verbose: print 'dx_flat: ', dx_flat.shape
+  if verbose: print('dx_flat: ', dx_flat.shape)
 
   dx = dx_flat.reshape(N, T, V)
 

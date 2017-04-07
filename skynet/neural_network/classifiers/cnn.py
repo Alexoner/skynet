@@ -62,7 +62,7 @@ class ThreeLayerConvNet(object):
     #                             END OF YOUR CODE                             #
     ############################################################################
 
-    for k, v in self.params.iteritems():
+    for k, v in self.params.items():
       self.params[k] = v.astype(dtype)
 
 
@@ -260,7 +260,7 @@ class FunConvNet(object):
     #                             END OF YOUR CODE                             #
     ############################################################################
 
-    for k, v in self.params.iteritems():
+    for k, v in self.params.items():
       self.params[k] = v.astype(dtype)
 
 
@@ -346,7 +346,7 @@ class FunConvNet(object):
     loss_reg = 0.0
     loss_data, dscores = softmax_loss(scores, y)
     dout = dscores
-    for l in reversed(range(self.num_layers)):
+    for l in reversed(list(range(self.num_layers))):
       l1 = l + 1
       if l < self.num_convs:
         (dout,
@@ -519,7 +519,7 @@ class AntConvNet(object):
     if self.use_batchnorm:
       self.bn_params = [{'mode': 'train'} for i in range(self.num_layers - 1)]
 
-    for k, v in self.params.items():
+    for k, v in list(self.params.items()):
       self.params[k] = v.astype(dtype)
 
 
@@ -607,7 +607,7 @@ class AntConvNet(object):
 
     loss_data, dscores = softmax_loss(scores, y)
     dout = dscores
-    for i in reversed(range(self.num_layers)):
+    for i in reversed(list(range(self.num_layers))):
       l1 = i + 1
       if i < self.num_convs:
         if self.use_batchnorm:

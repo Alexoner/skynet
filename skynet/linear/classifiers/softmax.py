@@ -33,7 +33,7 @@ def softmax_loss_naive(W, X, y, reg):
   N  = X.shape[0]
   # N x C matrix
   scores = X.dot(W)
-  for i in xrange(N):
+  for i in range(N):
     scores_i = scores[i, :]
     scores_i -= np.max(scores_i, axis=-1)
     P_i = np.exp(scores_i)
@@ -88,12 +88,12 @@ def softmax_loss_vectorized(W, X, y, reg):
   p /= np.sum(p, axis=1, keepdims=True)
 
   # cross-entropy loss
-  loss_data = -np.sum(np.log(p[range(y.size), y])) / N
+  loss_data = -np.sum(np.log(p[list(range(y.size)), y])) / N
   loss_reg = 0.5 * reg * np.sum(W * W)
   loss = loss_data + loss_reg
 
   dscores = p
-  dscores[range(y.size), y] -= 1.0
+  dscores[list(range(y.size)), y] -= 1.0
   dW = X.T.dot(dscores) / N + reg * W
   pass
   #############################################################################

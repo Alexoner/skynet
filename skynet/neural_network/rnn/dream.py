@@ -16,7 +16,7 @@
 # In[1]:
 
 # imports and basic notebook setup
-from cStringIO import StringIO
+from io import StringIO
 import numpy as np
 import scipy.ndimage as nd
 import PIL.Image
@@ -111,7 +111,7 @@ def deepdream(net, base_img, iter_n=10, octave_n=4, octave_scale=1.4,
               end='inception_4c/output', clip=True, **step_params):
     # prepare base images for all octaves
     octaves = [preprocess(net, base_img)]
-    for i in xrange(octave_n-1):
+    for i in range(octave_n-1):
         octaves.append(nd.zoom(octaves[-1], (1, 1.0/octave_scale,1.0/octave_scale), order=1))
     
     src = net.blobs['data']
@@ -125,7 +125,7 @@ def deepdream(net, base_img, iter_n=10, octave_n=4, octave_scale=1.4,
 
         src.reshape(1,3,h,w) # resize the network's input image size
         src.data[0] = octave_base+detail
-        for i in xrange(iter_n):
+        for i in range(iter_n):
             make_step(net, end=end, clip=clip, **step_params)
             
             # visualization
@@ -133,7 +133,7 @@ def deepdream(net, base_img, iter_n=10, octave_n=4, octave_scale=1.4,
             if not clip: # adjust image contrast if clipping is disabled
                 vis = vis*(255.0/np.percentile(vis, 99.98))
             showarray(vis)
-            print octave, i, end, vis.shape
+            print(octave, i, end, vis.shape)
             clear_output(wait=True)
             
         # extract details produced on the current octave
@@ -168,7 +168,7 @@ _=deepdream(net, img, end='inception_3b/5x5_reduce')
 
 # In[11]:
 
-net.blobs.keys()
+list(net.blobs.keys())
 
 
 # What if we feed the `deepdream` function its own output, after applying a little zoom to it? It turns out that this leads to an endless stream of impressions of the things that the network saw during training. Some patterns fire more often than others, suggestive of basins of attraction.
@@ -177,7 +177,7 @@ net.blobs.keys()
 
 # In[6]:
 
-get_ipython().system(u'mkdir frames')
+get_ipython().system('mkdir frames')
 frame = img
 frame_i = 0
 
@@ -186,7 +186,7 @@ frame_i = 0
 
 h, w = frame.shape[:2]
 s = 0.05 # scale coefficient
-for i in xrange(100):
+for i in range(100):
     frame = deepdream(net, frame)
     PIL.Image.fromarray(np.uint8(frame)).save("frames/%04d.jpg"%frame_i)
     frame = nd.affine_transform(frame, [1-s,1-s,1], [h*s/2,w*s/2,0], order=1)
