@@ -52,7 +52,7 @@ class ThreeLayerConvNet(object):
         num_filters, C, filter_size, filter_size)
     self.params['b1'] = np.zeros(num_filters)
     self.params['W2'] = weight_scale * np.random.randn(
-        num_filters * H * W / 4, hidden_dim)
+        num_filters * H * W // 4, hidden_dim)
     self.params['b2'] = np.zeros(hidden_dim)
     self.params['W3'] = weight_scale * np.random.randn(
         hidden_dim, num_classes)
@@ -78,7 +78,7 @@ class ThreeLayerConvNet(object):
 
     # pass conv_param to the forward pass for the convolutional layer
     filter_size = W1.shape[2]
-    conv_param = {'stride': 1, 'pad': (filter_size - 1) / 2}
+    conv_param = {'stride': 1, 'pad': (filter_size - 1) // 2}
 
     # pass pool_param to the forward pass for the max-pooling layer
     pool_param = {'pool_height': 2, 'pool_width': 2, 'stride': 2}
@@ -143,11 +143,11 @@ class FunConvNet(object):
                conv_params=[
                    {
                        'num_filters': 64, 'filter_size': 5,
-                       'stride': 1, #'pad': (filter_size - 1) / 2
+                       'stride': 1, #'pad': (filter_size - 1) // 2
                    },
                    {
                        'num_filters': 128, 'filter_size': 3,
-                       'stride': 1, #'pad': (filter_size - 1) / 2
+                       'stride': 1, #'pad': (filter_size - 1) // 2
                    },
                ],
                hidden_dims=[512, 128], num_classes=10,
@@ -163,7 +163,7 @@ class FunConvNet(object):
         - num_filters  : Number of filters to use in the convolutional layer
         - filter_size : Sequence of size of filters to use in the convolutional layer
         - stride : window moving stride
-        - pad: default (filter_size -1)/2 to preserve the previous dimension
+        - pad: default (filter_size -1)//2 to preserve the previous dimension
     - pool_params  : not exposed yet!
     - hidden_dims  : A list of integers number of units to use in the
       fully-connected hidden layer.
@@ -222,7 +222,7 @@ class FunConvNet(object):
       if l < self.num_convs:
         # meta parameters
         self.conv_params[l].setdefault(
-            'pad', (self.conv_params[l]['filter_size']-1 )/2)
+            'pad', (self.conv_params[l]['filter_size']-1 )//2)
 
         # learnable parameters
         # TODO: consider use weight np.sqrt(2.0 / fan_in) here
@@ -419,10 +419,10 @@ class AntConvNet(object):
     Inputs:
     - input_dim    : Tuple (C, H, W) giving size of input data
     - conv_params  : convolutional layers parameters
-        - num_filters  : Number of filters to use in the convolutional layer
+        - num_filters : Number of filters to use in the convolutional layer
         - filter_size : Sequence of size of filters to use in the convolutional layer
         - stride : window moving stride
-        - pad: default (filter_size -1)/2 to preserve the previous dimension
+        - pad: default (filter_size -1)//2 to preserve the previous dimension
     - pool_params  : not exposed yet!
     - hidden_dims  : A list of integers number of units to use in the
       fully-connected hidden layer.
@@ -460,7 +460,7 @@ class AntConvNet(object):
       l1 = i + 1
       # conv layers
       if i < self.num_convs:
-        self.conv_params[i].setdefault('pad', (self.conv_params[i]['filter_size']-1 )/2)
+        self.conv_params[i].setdefault('pad', (self.conv_params[i]['filter_size']-1 )//2)
         self.conv_params[i].setdefault('stride', 1)
 
         self.params['W%d' % l1] = weight_scale * np.random.randn(
@@ -478,7 +478,7 @@ class AntConvNet(object):
       elif i < self.num_layers - 1:
         self.params['W%d' % l1] = weight_scale * np.random.randn(
            i == self.num_convs and
-             self.conv_params[i-1]['num_filters'] * H * W * 2 ** (-2 * self.num_convs)
+             self.conv_params[i-1]['num_filters'] * H * W // 2 ** (2 * self.num_convs)
              or self.hidden_dims[i - 1 - self.num_convs],
            self.hidden_dims[i - self.num_convs])
         self.params['b%d' % l1] = np.zeros(self.hidden_dims[i - self.num_convs])

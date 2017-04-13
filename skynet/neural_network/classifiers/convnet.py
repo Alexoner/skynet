@@ -143,7 +143,7 @@ def init_three_layer_convnet(input_shape=(3, 32, 32), num_classes=10,
   model = {}
   model['W1'] = np.random.randn(F1, 3, filter_size, filter_size)
   model['b1'] = np.random.randn(F1)
-  model['W2'] = np.random.randn(H * W * F1 / 4, FC)
+  model['W2'] = np.random.randn(H * W * F1 // 4, FC)
   model['b2'] = np.random.randn(FC)
   model['W3'] = np.random.randn(FC, num_classes)
   model['b3'] = np.random.randn(num_classes)
@@ -187,7 +187,7 @@ def three_layer_convnet(X, model, y=None, reg=0.0, dropout=None):
   W2, b2 = model['W2'], model['b2']
   W3, b3 = model['W3'], model['b3']
 
-  conv_param = {'stride': 1, 'pad': (W1.shape[2] - 1) / 2}
+  conv_param = {'stride': 1, 'pad': (W1.shape[2] - 1) // 2}
   pool_param = {'stride': 2, 'pool_height': 2, 'pool_width': 2}
   dropout_param = {'p': dropout}
   dropout_param['mode'] = 'test' if y is None else 'train'
@@ -265,7 +265,7 @@ def init_five_layer_convnet(input_shape=(3, 64, 64), num_classes=100,
   model['b2'] = np.random.randn(F2)
   model['W3'] = np.random.randn(F3, F2, filter_sizes[2], filter_sizes[2])
   model['b3'] = np.random.randn(F3)
-  model['W4'] = np.random.randn(H * W * F3 / 64, FC)
+  model['W4'] = np.random.randn(H * W * F3 // 64, FC)
   model['b4'] = np.random.randn(FC)
   model['W5'] = np.random.randn(FC, num_classes)
   model['b5'] = np.random.randn(num_classes)
@@ -347,9 +347,9 @@ def five_layer_convnet(X, model, y=None, reg=0.0, dropout=1.0,
   W4, b4 = model['W4'], model['b4']
   W5, b5 = model['W5'], model['b5']
 
-  conv_param_1 = {'stride': 1, 'pad': (W1.shape[2] - 1) / 2}
-  conv_param_2 = {'stride': 1, 'pad': (W2.shape[2] - 1) / 2}
-  conv_param_3 = {'stride': 1, 'pad': (W3.shape[2] - 1) / 2}
+  conv_param_1 = {'stride': 1, 'pad': (W1.shape[2] - 1) // 2}
+  conv_param_2 = {'stride': 1, 'pad': (W2.shape[2] - 1) // 2}
+  conv_param_3 = {'stride': 1, 'pad': (W3.shape[2] - 1) // 2}
   pool_param = {'stride': 2, 'pool_height': 2, 'pool_width': 2}
   dropout_param = {'p': dropout}
   dropout_param['mode'] = 'test' if y is None else 'train'

@@ -18,15 +18,9 @@ def random_flips(X):
   #############################################################################
   N, _, _, _ = X.shape
   out = np.zeros_like(X)
-  for n in range(N):
-      rand_indicator = np.random.rand()
-      if rand_indicator > 0.5:
-          # TODO: x flip
-          out[n,...] = X[n,...,::-1]
-          pass
-      else:
-          # TODO: y flip ? or do nothing?
-          out[n,...] = X[n,...]
+  mask = np.random.randint(2, size=N)
+  out[mask==1] = X[mask==1, ..., ::-1]
+  out[mask==0] = X[mask==0] # TODO: do nothing or y flip?
   pass
   #############################################################################
   #                           END OF YOUR CODE                                #
@@ -57,7 +51,7 @@ def random_crops(X, crop_shape):
   for n in range(N):
       x0 = np.random.randint(0, W - WW + 1)
       y0 = np.random.randint(0, H - HH + 1)
-      out[n,:] = X[n,:,y0:y0+HH,x0:x0+WW]
+      out[n, :] = X[n, :, y0:y0+HH, x0:x0+WW]
       pass
   pass
   #############################################################################
@@ -91,7 +85,7 @@ def random_contrast(X, scale=(0.8, 1.2)):
   #############################################################################
   for n in range(N):
       scalar = np.random.uniform(*scale)
-      out[n,...] = X[n,...] * scalar
+      out[n, ...] = X[n, ...] * scalar
   pass
   #############################################################################
   #                           END OF YOUR CODE                                #
@@ -155,13 +149,14 @@ def fixed_crops(X, crop_shape, crop_type):
   Returns:
   Array of cropped data of shape (N, C, HH, WW)
   """
-  N, C, H, W = X.shape
+  _, _, H, W = X.shape
   HH, WW = crop_shape
 
-  x0 = (W - WW) / 2
-  y0 = (H - HH) / 2
+  x0 = (W - WW) // 2
+  y0 = (H - HH) // 2
   x1 = x0 + WW
   y1 = y0 + HH
+  # print(x0, y0, x1, y1)
 
   if crop_type == 'center':
     return X[:, :, y0:y1, x0:x1]
@@ -175,4 +170,3 @@ def fixed_crops(X, crop_shape, crop_type):
     return X[:, :, -HH:, -WW:]
   else:
     raise ValueError('Unrecognized crop type %s' % crop_type)
-

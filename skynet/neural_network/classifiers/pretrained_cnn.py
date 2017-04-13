@@ -42,7 +42,7 @@ class PretrainedCNN(object):
       self.params['beta%d' % (i + 1)] = np.zeros(next_dim)
       self.bn_params.append({'mode': 'train'})
       prev_dim = next_dim
-      if self.conv_params[i]['stride'] == 2: cur_size /= 2
+      if self.conv_params[i]['stride'] == 2: cur_size //= 2
 
     # Add a fully-connected layers
     fan_in = cur_size * cur_size * self.num_filters[-1]
@@ -89,6 +89,7 @@ class PretrainedCNN(object):
             raise ValueError('shapes for %s do not match' % k)
         if k.startswith('running_mean'):
           i = int(k[12:]) - 1
+          print( self.bn_params[i]['running_mean'].shape, v.shape)
           assert self.bn_params[i]['running_mean'].shape == v.shape
           self.bn_params[i]['running_mean'] = v.copy()
           if verbose: print(k, v.shape)

@@ -7,8 +7,8 @@ def affine_forward(x, w, b):
 
   The input x has shape (N, d_1, ..., d_k) and contains a minibatch of N
   examples, where each example x[i] has shape (d_1, ..., d_k). We will
-  reshape each input into a vector of dimension D = d_1 * ... * d_k, and
-  then transform it to an output vector of dimension M.
+  reshape each input into a vector of dimension D = \prod_i d_i = d_1 * ... * d_k,
+  and then transform it to an output vector of dimension M.
 
   Inputs:
   - x: A numpy array containing input data, of shape (N, d_1, ..., d_k)
@@ -172,17 +172,18 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     # the momentum variable to update the running mean and running variance,    #
     # storing your result in the running_mean and running_var variables.        #
     #############################################################################
-    mean = np.mean(x, axis=0, keepdims=True)
-    var = np.var(x, axis=0, keepdims=True)
-    # standard deviation
-    std = np.sqrt(var + eps)
-    # x normalized
-    xn = (x - mean) / std
+    # Compute output
+    mu = np.mean(x, axis=0)
+    xc = x - mu # x centralized
+    var = np.var(x, axis=0)
+    std = np.sqrt(var + eps) # standard deviation
+    xn = xc / std # x normalized
     out = y = gamma * xn + beta
 
-    running_mean = momentum * running_mean + (1 - momentum) * mean
+    # Update running average of variance
+    running_mean = momentum * running_mean + (1 - momentum) * mu
     running_var = momentum * running_var + (1 - momentum) * var
-    cache = (mode, x, xn, gamma, beta, mean, std, out)
+    cache = (mode, x, xn, gamma, beta, mu, std, out)
     pass
     #############################################################################
     #                             END OF YOUR CODE                              #
@@ -194,8 +195,11 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     # and shift the normalized data using gamma and beta. Store the result in   #
     # the out variable.                                                         #
     #############################################################################
-    xn = (x - running_mean) / np.sqrt(running_var + eps)
+    # Using running mean and variance to normalize
+    std = np.sqrt(running_var + eps)
+    xn = (x - running_mean) / std
     out = y = gamma * xn + beta
+    cache = (mode, x, xn, gamma, beta, std)
     pass
     #############################################################################
     #                             END OF YOUR CODE                              #
@@ -233,17 +237,28 @@ def batchnorm_backward(dout, cache):
   # TODO: Implement the backward pass for batch normalization. Store the      #
   # results in the dx, dgamma, and dbeta variables.                           #
   #############################################################################
-  (mode, x, xn, gamma, beta, mean, std, out) = cache
-  # NOTE: must cast shape to float
-  N = float(x.shape[0])
-  dxn = gamma * dout
-  # full derivative to variance
-  dvar = np.sum((x-mean)*dxn * (-1.0/2)*std**(-3), axis=0)
-  # full derivative to mean
-  dmean = np.sum(dxn * (-1.0/std), axis=0) + dvar * np.mean(-2 * (x - mean), axis=0)
-  dx = dxn / std + dvar * 2*(x-mean)/N + dmean / N
-  dgamma = np.sum(dout * xn, axis=0)
-  dbeta = np.sum(dout, axis=0)
+  mode = cache[0]
+  if mode == 'train':
+      (mode, x, xn, gamma, beta, mu, std, out) = cache
+      # NOTE: must cast shape to float
+      N = float(x.shape[0])
+      dxn = gamma * dout
+      # full derivative to variance
+      dvar = np.sum((x-mu)*dxn * (-1.0/2)*std**(-3), axis=0)
+      # full derivative to mean
+      dmu = np.sum(dxn * (-1.0/std), axis=0) + dvar * np.mean(-2 * (x - mu), axis=0)
+      dx = dxn / std + dvar * 2*(x-mu)/N + dmu / N
+      dgamma = np.sum(dout * xn, axis=0)
+      dbeta = np.sum(dout, axis=0)
+  elif mode == 'test':
+    (mode, x, xn, gamma, beta, std) = cache
+    dbeta = dout.sum(axis=0)
+    dgamma = np.sum(xn * dout, axis=0)
+    dxn = gamma * dout
+    dx = dxn / std
+  else:
+    raise ValueError(mode)
+
   pass
   #############################################################################
   #                             END OF YOUR CODE                              #
@@ -407,8 +422,8 @@ def conv_forward_naive(x, w, b, conv_param):
 
   Returns a tuple of:
   - out: Output data, of shape (N, F, H', W') where H' and W' are given by
-    H' = 1 + (H + 2 * pad - HH) / stride
-    W' = 1 + (W + 2 * pad - WW) / stride
+    H' = 1 + (H + 2 * pad - HH) // stride
+    W' = 1 + (W + 2 * pad - WW) // stride
   - cache: (x, w, b, conv_param)
   """
   out = None
@@ -422,8 +437,8 @@ def conv_forward_naive(x, w, b, conv_param):
   pad = conv_param['pad']
   stride = conv_param['stride']
   # output matrix shape
-  Ho = 1 + (H + 2*pad - HH) / stride
-  Wo = 1 + (W + 2*pad - WW) / stride
+  Ho = 1 + (H + 2*pad - HH) // stride
+  Wo = 1 + (W + 2*pad - WW) // stride
   x_padded = np.pad(x, ((0,), (0,), (pad,), (pad,)), mode='constant', constant_values=(0, 0))
   out = np.zeros((N, F, Ho, Wo))
   # n-th example
@@ -528,8 +543,8 @@ def max_pool_forward_naive(x, pool_param):
 
   # shape
   N, C, H, W = x.shape
-  Ho = 1 + (H + 2*0 - HH) / stride
-  Wo = 1 + (W + 2*0 - WW) / stride
+  Ho = 1 + (H + 2*0 - HH) // stride
+  Wo = 1 + (W + 2*0 - WW) // stride
 
   # initialization
   out = np.zeros((N, C, Ho, Wo))

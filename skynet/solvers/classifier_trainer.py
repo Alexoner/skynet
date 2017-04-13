@@ -6,8 +6,8 @@ class ClassifierTrainer(object):
   def __init__(self):
     self.step_cache = {} # for storing velocities in momentum update
 
-  def train(self, X, y, X_val, y_val, 
-            model, loss_function, 
+  def train(self, X, y, X_val, y_val,
+            model, loss_function,
             reg=0.0, dropout=1.0,
             learning_rate=1e-2, momentum=0, learning_rate_decay=0.95,
             update='momentum', sample_batches=True,
@@ -63,7 +63,7 @@ class ClassifierTrainer(object):
     N = X.shape[0]
 
     if sample_batches:
-      iterations_per_epoch = N / batch_size # using SGD
+      iterations_per_epoch = N // batch_size # using SGD
     else:
       iterations_per_epoch = 1 # using GD
     num_iters = num_epochs * iterations_per_epoch
@@ -100,14 +100,14 @@ class ClassifierTrainer(object):
         if update == 'sgd':
           dx = -learning_rate * grads[p]
         elif update == 'momentum':
-          if not p in self.step_cache: 
+          if not p in self.step_cache:
             self.step_cache[p] = np.zeros(grads[p].shape)
           dx = np.zeros_like(grads[p]) # you can remove this after
           dx = momentum * self.step_cache[p] - learning_rate * grads[p]
           self.step_cache[p] = dx
         elif update == 'rmsprop':
           decay_rate = 0.99 # you could also make this an option
-          if not p in self.step_cache: 
+          if not p in self.step_cache:
             self.step_cache[p] = np.zeros(grads[p].shape)
           dx = np.zeros_like(grads[p]) # you can remove this after
           self.step_cache[p] = self.step_cache[p] * decay_rate + (1.0 - decay_rate) * grads[p] ** 2
@@ -139,7 +139,7 @@ class ClassifierTrainer(object):
         # Computing a forward pass with a batch size of 1000 will is no good,
         # so we batch it
         y_pred_train = []
-        for i in range(X_train_subset.shape[0] / 100):
+        for i in range(X_train_subset.shape[0] // 100):
           X_train_slice = X_train_subset[i*100:(i+1)*100]
           if predict_fn is not None:
             X_train_slice = predict_fn(X_train_slice)
@@ -151,7 +151,7 @@ class ClassifierTrainer(object):
 
         # evaluate val accuracy, but split the validation set into batches
         y_pred_val = []
-        for i in range(X_val.shape[0] / 100):
+        for i in range(X_val.shape[0] // 100):
           X_val_slice = X_val[i*100:(i+1)*100]
           if predict_fn is not None:
             X_val_slice = predict_fn(X_val_slice)
@@ -160,7 +160,7 @@ class ClassifierTrainer(object):
         y_pred_val = np.hstack(y_pred_val)
         val_acc = np.mean(y_pred_val ==  y_val)
         val_acc_history.append(val_acc)
-        
+
         # keep track of the best model based on validation accuracy
         if val_acc > best_val_acc:
           # make a copy of the model
