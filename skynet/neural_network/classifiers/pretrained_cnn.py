@@ -89,7 +89,6 @@ class PretrainedCNN(object):
             raise ValueError('shapes for %s do not match' % k)
         if k.startswith('running_mean'):
           i = int(k[12:]) - 1
-          print( self.bn_params[i]['running_mean'].shape, v.shape)
           assert self.bn_params[i]['running_mean'].shape == v.shape
           self.bn_params[i]['running_mean'] = v.copy()
           if verbose: print(k, v.shape)

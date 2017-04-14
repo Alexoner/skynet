@@ -11,7 +11,7 @@ Start with 1.
 Seldomly exeeding 1000.
 
 ### Word Embedding
-128，256, ...
+128, 256, ...
 
 ## Data and the Loss
 
