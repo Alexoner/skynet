@@ -1,21 +1,30 @@
+from abc import ABCMeta, abstractmethod
 import numpy as np
 
-class BaseEstimator(object):
+
+class BaseEstimator(object, metaclass=ABCMeta):
 
   def __init__(self, reg=0.0, dtype=np.float32):
     """
     Initialize a model.
 
-    Inputs:
+    Inputs
+    ------
     - reg: Scalar giving L2 regularization strength.
     - dtype: numpy datatype to use for computation.
+
+    Attributes
+    ----------
+    - params: Dictionary of parameters, such as 'W1', 'b1', 'W2', 'b2', ...
+    - reg: Regularization strength
+    - dtype: Numpy data type
     """
     self.params = {}
-    self.reg = reg
+    # self.reg = reg
     self.dtype = dtype
 
-  @abstract_method
-  def loss(self, X, y=None):
+  @abstractmethod
+  def loss(self, X, y=None, reg=0.0):
     """
     Compute the loss function and its derivative for a minibatch data.
     Subclasses will override this.
@@ -39,6 +48,10 @@ class BaseEstimator(object):
     """
     pass
 
+  @abstractmethod
+  def getNumClasses(self, y):
+      pass
+
   def train(self, X, y, learning_rate=1e-3, reg=1e-5, num_iters=100,
             batch_size=200, verbose=False):
     """
@@ -61,10 +74,10 @@ class BaseEstimator(object):
     A list containing the value of the loss function at each training iteration.
     """
     num_train, dim = X.shape
-    num_classes = np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
-    if self.W is None:
-      # lazily initialize W
-      self.W = 0.001 * np.random.randn(dim, num_classes)
+    num_classes = self.getNumClasses(y)
+    # lazily initialize W
+    self.params.setdefault('W', 0.001 * np.random.randn(dim, num_classes))
+    self.params.setdefault('b', 0)
 
     # Run stochastic gradient descent to optimize W
     loss_history = []
@@ -102,7 +115,7 @@ class BaseEstimator(object):
       # Update the weights using the gradient and the learning rate.          #
       #########################################################################
       step = -learning_rate * grad
-      self.W += step
+      self.params['W'] += step
       pass
       #########################################################################
       #                       END OF YOUR CODE                                #
@@ -113,6 +126,7 @@ class BaseEstimator(object):
 
     return loss_history
 
+  @abstractmethod
   def predict(self, X):
     """
     Use the trained weights of this linear classifier to predict labels for
@@ -137,9 +151,17 @@ class BaseEstimator(object):
     return scores
 
 class BaseRegressor(BaseEstimator):
-    pass
+
+    def getNumClasses(self, y):
+        return y.shape[1] # assume y takes values 0...K-1 where K is number of classes
+
+    def predict(self, X, y):
+        return super().predict(X)
 
 class BaseClassifier(BaseEstimator):
+
+  def getNumClasses(self, y):
+    return np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
 
   def predict(self, X):
     scores = super().predict(X)
