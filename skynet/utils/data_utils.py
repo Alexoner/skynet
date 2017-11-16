@@ -3,6 +3,15 @@ import numpy as np
 import os
 from scipy.misc import imread
 
+def generate_decision_boundary_data():
+    xx, yy = np.mgrid[-5:5:.01, -5:5:.01] # xx, yy: 1000x1000
+    print(xx.shape)
+    # grid = np.c_[xx.ravel(), yy.ravel()] # grid: 1000_000x2
+    grid = np.concatenate((xx.reshape(-1, 1), yy.reshape(-1, 1)), 1)
+    assert(np.all(grid == np.c_[xx.ravel(), yy.ravel()]))
+    assert(np.all(grid == np.concatenate((xx.reshape(-1, 1), yy.reshape(-1, 1)), 1)))
+    return xx, yy, grid
+
 def load_CIFAR_batch(filename, encoding='latin1'):
   """ load single batch of cifar """
   with open(filename, 'rb') as f:

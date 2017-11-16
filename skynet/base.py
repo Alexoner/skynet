@@ -4,7 +4,8 @@ import numpy as np
 
 class BaseEstimator(object, metaclass=ABCMeta):
 
-  def __init__(self, reg=0.0, dtype=np.float32):
+  def __init__(self, learning_rate=1e-3, reg=1e-5, num_iters=100,
+            batch_size=200, verbose=False, dtype=np.float32):
     """
     Initialize a model.
 
@@ -20,11 +21,44 @@ class BaseEstimator(object, metaclass=ABCMeta):
     - dtype: Numpy data type
     """
     self.params = {}
-    # self.reg = reg
+    self.learning_rate = learning_rate
+    self.reg = reg
+    self.num_iters = num_iters
+    self.batch_size = batch_size
+    self.verbose = verbose
     self.dtype = dtype
 
+    self.loss_history = []
+
   @abstractmethod
-  def loss(self, X, y=None, reg=0.0):
+  def _getNumClasses(self, y):
+      pass
+
+  def _gradient_update(self, X_batch, y_batch):
+      # evaluate loss and gradient
+      loss, grads = self.loss(X_batch, y_batch)
+
+      # perform parameter update
+      #########################################################################
+      # TODO:                                                                 #
+      # Update the weights using the gradient and the learning rate.          #
+      #########################################################################
+      # for p, w in self.model.params.items():
+      for p, w in grads.items():
+          step = -self.learning_rate * w
+          self.params[p] += step
+      return loss
+
+  def initialize_weights(self, dim, num_classes):
+    self.dim = dim
+    self.num_classes = num_classes
+
+    self.params.setdefault('W', 0.001 * np.random.randn(dim, num_classes))
+    self.params.setdefault('b', 0)
+    pass
+
+  @abstractmethod
+  def loss(self, X, y=None):
     """
     Compute the loss function and its derivative for a minibatch data.
     Subclasses will override this.
@@ -48,10 +82,6 @@ class BaseEstimator(object, metaclass=ABCMeta):
     """
     pass
 
-  @abstractmethod
-  def getNumClasses(self, y):
-      pass
-
   def train(self, X, y, learning_rate=1e-3, reg=1e-5, num_iters=100,
             batch_size=200, verbose=False):
     """
@@ -74,13 +104,20 @@ class BaseEstimator(object, metaclass=ABCMeta):
     A list containing the value of the loss function at each training iteration.
     """
     num_train, dim = X.shape
-    num_classes = self.getNumClasses(y)
+    num_classes = self._getNumClasses(y)
     # lazily initialize W
-    self.params.setdefault('W', 0.001 * np.random.randn(dim, num_classes))
-    self.params.setdefault('b', 0)
+    self.initialize_weights(dim, num_classes)
 
     # Run stochastic gradient descent to optimize W
-    loss_history = []
+    # TODO: hyperparameters are model scope variables, should be defined upon initialization
+    self.learning_rate = learning_rate
+    self.reg = reg
+    self.num_iters = num_iters
+    self.batch_size = batch_size
+    self.verbose = verbose
+
+    self.loss_history = []
+
     for it in range(num_iters):
       X_batch = None
       y_batch = None
@@ -105,26 +142,17 @@ class BaseEstimator(object, metaclass=ABCMeta):
       #                       END OF YOUR CODE                                #
       #########################################################################
 
-      # evaluate loss and gradient
-      loss, grad = self.loss(X_batch, y_batch, reg)
-      loss_history.append(loss)
-
-      # perform parameter update
-      #########################################################################
-      # TODO:                                                                 #
-      # Update the weights using the gradient and the learning rate.          #
-      #########################################################################
-      step = -learning_rate * grad
-      self.params['W'] += step
+      loss = self._gradient_update(X_batch, y_batch)
       pass
       #########################################################################
       #                       END OF YOUR CODE                                #
       #########################################################################
 
+      self.loss_history.append(loss)
       if verbose and it % 100 == 0:
         print('iteration %d / %d: loss %f' % (it, num_iters, loss))
 
-    return loss_history
+    return self.loss_history
 
   @abstractmethod
   def predict(self, X):
@@ -150,9 +178,10 @@ class BaseEstimator(object, metaclass=ABCMeta):
     ###########################################################################
     return scores
 
+
 class BaseRegressor(BaseEstimator):
 
-    def getNumClasses(self, y):
+    def _getNumClasses(self, y):
         return y.shape[1] # assume y takes values 0...K-1 where K is number of classes
 
     def predict(self, X, y):
@@ -160,7 +189,7 @@ class BaseRegressor(BaseEstimator):
 
 class BaseClassifier(BaseEstimator):
 
-  def getNumClasses(self, y):
+  def _getNumClasses(self, y):
     return np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
 
   def predict(self, X):

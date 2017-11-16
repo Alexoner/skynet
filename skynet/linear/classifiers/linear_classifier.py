@@ -26,20 +26,22 @@ class LinearClassifier(BaseClassifier):
 class LinearSVM(LinearClassifier):
   """ A subclass that uses the Multiclass SVM loss function """
 
-  # TODO: migrate to new interface defined in super class
-  def loss(self, X_batch, y_batch=None, reg=0.0):
+  # DONE: migrate to new interface defined in super class
+  def loss(self, X_batch, y_batch=None):
     if y_batch is None:
         return X_batch.dot(self.params['W'])
-    return svm_loss_vectorized(self.params['W'], X_batch, y_batch, reg)
+    grads = {}
+    loss, grads['W'] = svm_loss_vectorized(self.params['W'], X_batch, y_batch, self.reg)
+    return loss, grads
 
 
 class Softmax(LinearClassifier):
   """ A subclass that uses the Softmax + Cross-entropy loss function """
 
-  # TODO: migrate to new interface defined in super class
-  def loss(self, X_batch, y_batch=None, reg=0.0):
+  # DONE: migrate to new interface defined in super class
+  def loss(self, X_batch, y_batch=None):
     if y_batch is None:
         return X_batch.dot(self.params['W'])
-    return softmax_loss_vectorized(self.params['W'], X_batch, y_batch, reg)
-
-
+    grads = {}
+    loss, grads['W'] = softmax_loss_vectorized(self.params['W'], X_batch, y_batch, self.reg)
+    return loss, grads
