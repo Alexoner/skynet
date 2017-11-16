@@ -4,10 +4,10 @@ from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
-from .linear_classifier import Softmax, LinearSVM
-from ...utils.data_utils import generate_decision_boundary_data
-from skynet.linear.classifiers.softmax import softmax_loss_naive
-from ...utils.error_utils import rel_error
+from skynet.linear.linear_classifier import Softmax, LinearSVM
+from skynet.utils.data_utils import generate_decision_boundary_data
+from skynet.linear.softmax import softmax_loss_naive
+from skynet.utils.error_utils import rel_error
 
 
 X_dev, y_dev = make_classification(n_features=3073)
@@ -47,7 +47,7 @@ def test_softmax_gradient_check():
     toc = time.time()
     print('naive loss: %e computed in %fs' % (loss_naive, toc - tic))
 
-    from skynet.linear.classifiers.softmax import softmax_loss_vectorized
+    from skynet.linear.softmax import softmax_loss_vectorized
     tic = time.time()
     loss_vectorized, grad_vectorized = softmax_loss_vectorized(W, X_dev, y_dev, 0.00001)
     toc = time.time()

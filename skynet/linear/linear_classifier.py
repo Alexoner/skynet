@@ -1,5 +1,5 @@
 import numpy as np
-from ...base import BaseClassifier
+from ..base import BaseClassifier
 from .linear_svm import *
 from .softmax import *
 

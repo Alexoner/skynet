@@ -1,7 +1,7 @@
 import numpy as np
-from .linear_regression import LinearRegression
-from ...utils.gradient_check import eval_numerical_gradient
-from .mean_squared_error import mean_squared_error
+from skynet.linear.linear_regression import LinearRegression
+from skynet.utils.gradient_check import eval_numerical_gradient
+from skynet.linear.mean_squared_error import mean_squared_error
 import matplotlib.pyplot as plt
 
 def test_linear_regression_closed_form_1x1():
