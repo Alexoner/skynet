@@ -4,10 +4,12 @@ from sklearn.datasets import make_classification
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
+from skynet.linear.k_nearest_neighbor import KNearestNeighbor
 from skynet.linear.linear_classifier import Softmax, LinearSVM
 from skynet.utils.data_utils import generate_decision_boundary_data
 from skynet.linear.softmax import softmax_loss_naive
 from skynet.utils.error_utils import rel_error
+from ..utils.vis_utils import visualize_decision_boundary
 
 
 X_dev, y_dev = make_classification(n_features=3073)
@@ -73,35 +75,37 @@ def test_softmax_small_data():
 
     X_train, y_train, X_test, y_test = generate_data()
     model = Softmax()
-    model.train(X_train, y_train, learning_rate=1e-4, batch_size=500)
+    model.train(X_train, y_train, learning_rate=1e-4)
     y_test_pred = model.predict(X_test)
 
     # plot
-    xx, yy, grid = generate_decision_boundary_data()
-    z = probs = model.predict(grid).reshape(xx.shape)
-    print("z: ", z.shape, "xx: ", xx.shape)
+    # xx, yy, grid = generate_decision_boundary_data()
+    # z = probs = model.predict(grid).reshape(xx.shape)
+    # print("z: ", z.shape, "xx: ", xx.shape)
 
-    fig, ax = plt.subplots(figsize=(8, 6))
-    contour = ax.contourf(xx, yy, probs, 25, cmap="RdBu",
-                          vmin=0, vmax=1)
+    # fig, ax = plt.subplots(figsize=(8, 6))
+    # contour = ax.contourf(xx, yy, probs, 25, cmap="RdBu",
+                          # vmin=0, vmax=1)
 
-    ax.scatter(X_test[100:, 0], X_test[100:, 1], c=y_test[100:], s=50,
-               cmap="RdBu", vmin=-.2, vmax=1.2,
-               edgecolor="white", linewidth=1)
-    ax_c = fig.colorbar(contour)
-    ax_c.set_label("$P(y = 1)$")
-    ax_c.set_ticks([0, .25, .5, .75, 1])
-    ax.set(aspect="equal",
-           xlim=(-5, 5), ylim=(-5, 5),
-           xlabel="$X_1$", ylabel="$X_2$")
-    plt.savefig('linear_softmax_classification.png')
+    # ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test[:], s=50,
+               # cmap="RdBu", vmin=-.2, vmax=1.2,
+               # edgecolor="white", linewidth=1)
+    # ax_c = fig.colorbar(contour)
+    # ax_c.set_label("$P(y = 1)$")
+    # ax_c.set_ticks([0, .25, .5, .75, 1])
+    # ax.set(aspect="equal",
+           # xlim=(-5, 5), ylim=(-5, 5),
+           # xlabel="$X_1$", ylabel="$X_2$")
+    # plt.savefig('linear_softmax_classification.png')
+    visualize_decision_boundary(lambda x: model.predict(x), X_test, y_test, "linear_softmax.png")
 
     test_accuracy = np.mean(y_test == y_test_pred)
     print('softmax on small data final test set accuracy: %f' % (test_accuracy, ))
     assert(test_accuracy >= .90)
 
 def test_softmax_large_data():
-    X, y = make_classification(1_000, 100)
+    # if number of features larger than number of samples, add prior/regularization
+    X, y = make_classification(10_000, 100)
     X_train, X_test, y_train, y_test = train_test_split(X, y)
     model = Softmax()
     model.train(X_train, y_train, reg=1e-6)
@@ -109,7 +113,7 @@ def test_softmax_large_data():
     y_test_pred = model.predict(X_test)
     test_accuracy = np.mean(y_test == y_test_pred)
     print('softmax test set accuracy: %f' % (test_accuracy, ))
-    assert(test_accuracy >= .90)
+    assert(test_accuracy >= .85)
 
 
 def test_svm_small_data():
@@ -126,24 +130,28 @@ def test_svm_small_data():
     y_test_pred = model.predict(X_test)
 
     # plot
-    xx, yy, grid = generate_decision_boundary_data()
-    z = probs = model.predict(grid).reshape(xx.shape)
-
-    fig, ax = plt.subplots(figsize=(8, 6))
-    contour = ax.contourf(xx, yy, probs, 25, cmap="RdBu",
-                          vmin=0, vmax=1)
-
-    ax.scatter(X_test[100:, 0], X_test[100:, 1], c=y_test[100:], s=50,
-               cmap="RdBu", vmin=-.2, vmax=1.2,
-               edgecolor="white", linewidth=1)
-    ax_c = fig.colorbar(contour)
-    ax_c.set_label("$P(y = 1)$")
-    ax_c.set_ticks([0, .25, .5, .75, 1])
-    ax.set(aspect="equal",
-           xlim=(-5, 5), ylim=(-5, 5),
-           xlabel="$X_1$", ylabel="$X_2$")
-    plt.savefig('linear_svm.png')
+    visualize_decision_boundary(lambda x: model.predict(x), X_test, y_test, "linear_svm.png")
 
     test_accuracy = np.mean(y_test == y_test_pred)
     print('svm on small data final test set accuracy: %f' % (test_accuracy, ))
     assert(test_accuracy >= .90)
+
+def test_knn_small_data():
+
+    def generate_data():
+        # X, y = make_classification(n_features=2, n_samples=1000)
+        X, y = make_classification(50, 2, 2, 0, weights=[.5, .5], random_state=15)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
+        return X_train, y_train, X_test, y_test
+
+    X_train, y_train, X_test, y_test = generate_data()
+    model = KNearestNeighbor()
+    model.train(X_train, y_train)
+    y_test_pred = model.predict(X_test, k=1)
+
+    # plot
+    visualize_decision_boundary(lambda x: model.predict(x), X_test, y_test, "linear_knn.png")
+
+    test_accuracy = np.mean(y_test == y_test_pred)
+    print('knn on small data final test set accuracy: %f' % (test_accuracy, ))
+    assert(test_accuracy >= .70)

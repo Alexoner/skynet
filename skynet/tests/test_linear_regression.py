@@ -83,7 +83,7 @@ def test_linear_regression_train_1x1():
     X = np.random.rand(100, 1)
     w = np.array([[3.11],])
     b = np.random.rand()
-    y = X @ w + b
+    y = X @ w + b # + np.random.rand(100, 1) # plus noise
 
     # add ones, intercept terms to X
     X1 = np.ones((X.shape[0], X.shape[1] + 1,))
@@ -92,7 +92,8 @@ def test_linear_regression_train_1x1():
 
     model = LinearRegression()
     # model._closed_form(X1, y)
-    losses = model.train(X1, y, learning_rate=1, reg=0.0, num_iters=1000)
+    # losses = model.train(X1, y, learning_rate=1, reg=1e-3, num_iters=1000)
+    losses = model.train(X1, y, learning_rate=1, reg=0e-3, num_iters=1000)
 
     w_hat, b_hat = model.W, model.b
     print('Real parameters:\n', w, b)
@@ -147,5 +148,8 @@ def test_linear_regression_train_20x10():
     assert np.isclose(losses[-1].max(), 1e-8)
     plt.plot(losses)
     plt.ylim((0, min(.5, np.max(losses))))
-    plt.savefig('linear_linear_regression_20x10.png')
+    plt.title("loss")
+    plt.xlabel("iteration")
+    plt.ylabel("loss")
+    plt.savefig('linear_regression_20x10.png')
     # plt.show()

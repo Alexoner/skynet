@@ -1,5 +1,6 @@
 from math import sqrt, ceil
 import numpy as np
+import matplotlib.pyplot as plt
 
 def visualize_grid(Xs, ubound=255.0, padding=1):
   """
@@ -52,7 +53,7 @@ def vis_grid(Xs):
   ming = G.min()
   G = (G - ming)/(maxg-ming)
   return G
-  
+
 def vis_nn(rows):
   """ visualize array of arrays of images """
   N = len(rows)
@@ -69,5 +70,56 @@ def vis_nn(rows):
   G = (G - ming)/(maxg-ming)
   return G
 
+from ..utils.data_utils import generate_decision_boundary_data
+def visualize_decision_boundary(f, X, y, save_path=None):
+    '''
+    Plot the decision boundary given by function f.
 
+    @Input
+    - f: function
+    - X: scatter points' coordinate
+    - y: scatter points' label
+    '''
+    # generate grid data
+    xx, yy, grid = generate_decision_boundary_data(X)
 
+    probs = f(grid) # predict using the classifier
+    print('xx, yy, grid, probs shape: ', xx.shape, yy.shape, grid.shape, probs.shape)
+    probs = probs.reshape(xx.shape)
+
+    # plot contour with x coordinates, y coordinates, and corresponding function value
+    f, ax = plt.subplots(figsize=(8, 6))
+    plt.title("decision boundary with contour")
+    contour = ax.contourf(xx, yy, probs, 25, cmap="RdBu",
+                          vmin=0, vmax=1)
+    ax_c = f.colorbar(contour)
+    ax_c.set_label("$P(y = 1)$")
+    ax_c.set_ticks([0, .25, .5, .75, 1])
+
+    ax.scatter(X[:, 0], X[:, 1], c=y[:], s=50,
+               cmap="RdBu", vmin=-.2, vmax=1.2,
+               edgecolor="white", linewidth=1)
+
+    ax.set(aspect="equal",
+           xlim=(-5, 5), ylim=(-5, 5),
+           xlabel="$X_1$", ylabel="$X_2$")
+
+    # plot decision boundary
+    f, ax = plt.subplots(figsize=(8, 6))
+    plt.title("decision boundary")
+    ax.contour(xx, yy, probs, levels=[.5], cmap="Greys", vmin=0, vmax=.6) # grey color map
+
+    ax.scatter(X[:, 0], X[:, 1], c=y[:], s=50,
+               cmap="RdBu", vmin=-.2, vmax=1.2,
+               edgecolor="white", linewidth=1)
+
+    ax.set(aspect="equal",
+           xlim=(-5, 5), ylim=(-5, 5),
+           xlabel="$X_1$", ylabel="$X_2$")
+    if not save_path:
+        plt.show()
+    else:
+        plt.savefig(save_path)
+
+def visialize_regression(f, X, y):
+    pass

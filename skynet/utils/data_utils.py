@@ -3,11 +3,18 @@ import numpy as np
 import os
 from scipy.misc import imread
 
-def generate_decision_boundary_data():
-    xx, yy = np.mgrid[-5:5:.01, -5:5:.01] # xx, yy: 1000x1000
+def generate_decision_boundary_data(X=None):
+    if X is not None and X.shape[-1] == 2:
+        h = 0.01 # step
+        x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+        y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+        xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                             np.arange(y_min, y_max, h))
+    else:
+        xx, yy = np.mgrid[-5:5:.01, -5:5:.01] # xx, yy: 1000x1000
     print(xx.shape)
-    # grid = np.c_[xx.ravel(), yy.ravel()] # grid: 1000_000x2
-    grid = np.concatenate((xx.reshape(-1, 1), yy.reshape(-1, 1)), 1)
+    grid = np.c_[xx.ravel(), yy.ravel()] # grid: 1000_000x2
+    # grid = np.concatenate((xx.reshape(-1, 1), yy.reshape(-1, 1)), 1)
     assert(np.all(grid == np.c_[xx.ravel(), yy.ravel()]))
     assert(np.all(grid == np.concatenate((xx.reshape(-1, 1), yy.reshape(-1, 1)), 1)))
     return xx, yy, grid

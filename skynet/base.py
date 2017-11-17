@@ -149,7 +149,7 @@ class BaseEstimator(object, metaclass=ABCMeta):
       #########################################################################
 
       self.loss_history.append(loss)
-      if verbose and it % 100 == 0:
+      if verbose and it % (num_iters // 50) == 0:
         print('iteration %d / %d: loss %f' % (it, num_iters, loss))
 
     return self.loss_history
