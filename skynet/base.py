@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 
 
-class BaseEstimator(object, metaclass=ABCMeta):
+class BaseModel(object, metaclass=ABCMeta):
 
   def __init__(self, learning_rate=1e-3, reg=1e-5, num_iters=100,
             batch_size=200, verbose=False, dtype=np.float32):
@@ -179,7 +179,7 @@ class BaseEstimator(object, metaclass=ABCMeta):
     return scores
 
 
-class BaseRegressor(BaseEstimator):
+class BaseRegressor(BaseModel):
 
     def _getNumClasses(self, y):
         return y.shape[1] # assume y takes values 0...K-1 where K is number of classes
@@ -187,7 +187,7 @@ class BaseRegressor(BaseEstimator):
     def predict(self, X, y):
         return super().predict(X)
 
-class BaseClassifier(BaseEstimator):
+class BaseClassifier(BaseModel):
 
   def _getNumClasses(self, y):
     return np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
