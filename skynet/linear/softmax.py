@@ -1,5 +1,4 @@
 import numpy as np
-from random import shuffle
 
 def softmax_loss_naive(W, X, y, reg):
   """
@@ -88,7 +87,7 @@ def softmax_loss_vectorized(W, X, y, reg):
   p /= np.sum(p, axis=1, keepdims=True)
 
   # cross-entropy loss
-  loss_data = -np.sum(np.log(p[list(range(y.size)), y])) / N
+  loss_data = -np.sum(np.log(p[np.arange(y.size), y])) / N # cross entropy
   loss_reg = 0.5 * reg * np.sum(W * W)
   loss = loss_data + loss_reg
 
