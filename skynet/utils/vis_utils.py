@@ -121,5 +121,32 @@ def visualize_decision_boundary(f, X, y, save_path=None):
     else:
         plt.savefig(save_path)
 
-def visialize_regression(f, X, y):
+def visualize_regression(f, X, y):
     pass
+
+def visualize_cross_validation(results: dict):
+    """
+    Visualize cross validation accuracy in scatter plot.
+
+    Inputs
+    ------
+    - results: dict, maps from <learning rate, regularization strength> to accuracy
+
+    Returns
+    -------
+    None
+    """
+    import math
+    x_scatter = [math.log10(x[0]) for x in results]
+    y_scatter = [math.log10(x[1]) for x in results]
+
+    # plot training accuracy
+    marker_size = 100
+    colors = [results[x][0] for x in results]
+    plt.subplot(2, 1, 1)
+    plt.scatter(x_scatter, y_scatter, marker_size, c=colors) # default size of markers is 20
+    plt.colorbar()
+    plt.xlabel('log learning rate')
+    plt.ylabel('weight scale')
+    plt.title('cross validation performance')
+    plt.show()
