@@ -31,7 +31,7 @@ def notest_sklearn_tree_regression():
 
 def test_tree_classification():
     # X, y = make_classification()
-    X, y = make_classification(500, 2, 2, 0, weights=[.5, .5], random_state=15)
+    X, y = make_classification(5000, 2, 2, 0, weights=[.5, .5], random_state=15)
 
     plt.plot(X, y, '.')
     # plt.plot(X, y, '-')
