@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 from abc import abstractmethod
-from ..utils.metrics import calculate_entropy, calculate_gini_index, calculate_variance
+from ..metrics import calculate_entropy, calculate_gini_index, calculate_variance
 from ..base import BaseModel
 
 class Node:
@@ -40,9 +40,6 @@ class DecisionTree(BaseModel):
         self.min_gain = 0
         print("initialized decision tree")
         pass
-
-    def _getNumClasses(self, y):
-        return y.shape[1] if self.is_regression else np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
 
     def _split(self, X, y, i, split_point):
         # TODO: deal with multivariate categorical variable: 2^(k-1) - 1 possible splits
