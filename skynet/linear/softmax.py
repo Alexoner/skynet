@@ -101,3 +101,15 @@ def softmax_loss_vectorized(W, X, y, reg):
 
   return loss, dW
 
+def softmax(X):
+    """
+    Inputs:
+    - X: (N, C) score matrix, to compute softmax normalized probabilities with.
+
+    Returns:
+    - probabilities: (N, C) softmax probablities
+    """
+    # TODO: more robust computation, subtract mean, logarithm
+    expX = np.exp(X)
+    P = expX / np.sum(expX, axis=1)
+    return P

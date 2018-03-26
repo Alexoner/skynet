@@ -5,7 +5,7 @@ import numpy as np
 class BaseModel(object, metaclass=ABCMeta):
 
   def __init__(self, learning_rate=1e-3, reg=1e-5, num_iters=100,
-            batch_size=200, verbose=False, dtype=np.float32):
+            batch_size=200, verbose=False, dtype=np.float32, is_regression=True):
     """
     Initialize a model.
 
@@ -27,12 +27,14 @@ class BaseModel(object, metaclass=ABCMeta):
     self.batch_size = batch_size
     self.verbose = verbose
     self.dtype = dtype
+    self.is_regression = is_regression
 
     self.loss_history = []
 
-  @abstractmethod
+  # @abstractmethod
   def _getNumClasses(self, y):
-      pass
+      return y.shape[1] if self.is_regression else np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
+
 
   def _gradient_update(self, X_batch, y_batch):
       # evaluate loss and gradient
@@ -181,24 +183,46 @@ class BaseModel(object, metaclass=ABCMeta):
 
 class BaseRegressor(BaseModel):
 
-    def _getNumClasses(self, y):
-        return y.shape[1] # assume y takes values 0...K-1 where K is number of classes
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.is_regression = True
+
+    # def _getNumClasses(self, y):
+        # return y.shape[1] # assume y takes values 0...K-1 where K is number of classes
 
     def predict(self, X, y):
         return super().predict(X)
 
 class BaseClassifier(BaseModel):
 
-  def _getNumClasses(self, y):
-    return np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
+  def __init__(self, *args, **kwargs):
+      super().__init__(*args, **kwargs)
+      self.is_regression = False
 
-  def predict(self, X):
+  # def _getNumClasses(self, y):
+    # return np.max(y) + 1 # assume y takes values 0...K-1 where K is number of classes
+
+  def predict(self, X, output_probability=False):
+    """
+    Inputs:
+    - X, same as described in super
+    - output_probability: output probability
+
+    Returns:
+    - y_pred: predicted labels (N, 1) or probability (N, C)
+
+    """
     scores = super().predict(X)
     ###########################################################################
     # TODO:                                                                   #
     # Implement this method. Store the predicted labels in y_pred.            #
     ###########################################################################
-    y_pred = np.argmax(scores, axis=-1) # top scoring class
+    if output_probability:
+        # TODO: output probability
+        y_pred = np.argmax(scores, axis=-1) # top scoring class
+        pass
+    else:
+        y_pred = np.argmax(scores, axis=-1) # top scoring class
     ###########################################################################
     #                           END OF YOUR CODE                              #
     ###########################################################################

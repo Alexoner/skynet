@@ -1,7 +1,7 @@
 import numpy as np
 
 from ..utils.error_utils import rel_error
-from ..utils.metrics import *
+from ..metrics import *
 
 def test_calculate_pmf():
     y = np.array([1, 1, 2, 3, 3, 4, 4, 4])
@@ -35,3 +35,10 @@ def test_calculate_variance():
     assert calculate_variance(y) == 0
     y = np.array([1, 2])
     assert calculate_variance(y) == 0.5
+
+def test_precision_recall_f1_score():
+    y_true = np.array([0, 1, 1, 0, 1, 1, 1])
+    y_pred = [1, 1, 1, 0, 0, 1, 0]
+    assert(precision_score(y_pred, y_true) == 0.75)
+    assert(recall_score(y_pred, y_true) == 0.6)
+    assert(format(f1_score(y_pred, y_true), '.6f') == '0.666667')
