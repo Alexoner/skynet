@@ -25,7 +25,7 @@ What I cannot create, I do not understand. XD
 - Unsupervised Learning
 - Reinforcement Learning
 
-Test Cases and examples are included
+Test Cases and examples are included.
 
 ## Reference materials
 
