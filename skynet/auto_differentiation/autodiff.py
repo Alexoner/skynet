@@ -1,15 +1,21 @@
 '''
-https://github.com/dlsys-course/
-
 Reverse mode automatic differentiation algorithm.
 
 Representation - GRAPH
-Build the computation graph, with variables as nodes, corresponding to graph vertices.
-And vertices are connected by edges, a.k.a operators in computation context.
+Build the computation graph, with variables as nodes, corresponding to graph VERTICES.
+And vertices are connected by EDGES, a.k.a operators in computation context.
 
 And the gradient are also represented as a node, thus the computation graph
-only propagates forward, no backward propagation, as indicated by "reverse".
+only propagates FORWARD, no backward propagation, as indicated by "reverse".
 
+In the representation, the OBJECTIVE FUNCTION can be viewed as a MULTIVARIATE FUNCTION
+of nodes depending on.
+And to compute the gradients is to take the full derivatives.
+Full derivatives is computed by summing up all PARTIAL DERIVATIVES.
+
+Reference
+---------
+https://github.com/dlsys-course/
 '''
 import numpy as np
 
@@ -32,6 +38,7 @@ class Node(object):
         self.op = None
         self.const_attr = None
         self.name = ""
+        self.op_params = None # parameters passed to operator `op`
 
     def __add__(self, other):
         """Adding two nodes return a new node."""
@@ -44,6 +51,7 @@ class Node(object):
         return new_node
 
     def __mul__(self, other):
+        """Multiplying two nodes return a new node"""
         # TODO: Your code here
         if isinstance(other, Node):
             new_node = mul_op(self, other)
@@ -52,9 +60,18 @@ class Node(object):
 
         return new_node
 
+    def __truediv__(self, other):
+        new_node = mul_op(self, other ** -1)
+
+        return new_node
+
+    def __pow__(self, order):
+        return exp_op(order * log_op(self))
+
     # Allow left-hand-side add and multiply.
     __radd__ = __add__
     __rmul__ = __mul__
+    __rtruediv__ = lambda self, x: mul_op(x, self ** -1)
 
     def __str__(self):
         """Allow print to display node name."""
@@ -278,6 +295,66 @@ class OnesLikeOp(Op):
     def gradient(self, node, output_grad):
         return [zeroslike_op(node.inputs[0])]
 
+class ExpOp(Op):
+    """
+    Op to compute natural logarithm of a node element-wise
+    """
+    def __call__(self, node: Node):
+        new_node = Op.__call__(self)
+        new_node.inputs = [node]
+        new_node.name = '(exp {name})'.format(name=node.name)
+
+        return new_node
+
+    def compute(self, node, input_vals):
+        assert len(input_vals) == 1
+        assert isinstance(input_vals[0], np.ndarray)
+
+        return np.exp(input_vals[0])
+
+    def gradient(self, node, output_grad):
+        return [output_grad * node]
+
+class LogOp(Op):
+    """
+    Op to compute natural logarithm of a node element-wise
+    """
+    def __call__(self, node: Node):
+        new_node = Op.__call__(self)
+        new_node.inputs = [node]
+        new_node.name = '(ln {name})'.format(name=node.name)
+
+        return new_node
+
+    def compute(self, node, input_vals):
+        assert len(input_vals) == 1
+        assert isinstance(input_vals[0], np.ndarray)
+
+        return np.log(input_vals[0])
+
+    def gradient(self, node, output_grad):
+        return [output_grad / node.inputs[0]]
+
+class ReduceSumOp(Op):
+    """
+    Op to compute the reduce sum
+    """
+    def __call__(self, node: Node, axis=None, name=None):
+        new_node = super().__call__()
+        new_node.inputs = [node]
+        new_node.name = name or "(reduce_sum({name}))".format(name=node.name)
+        new_node.op_params = {'axis': axis}
+
+        return new_node
+
+    def compute(self, node: Node, input_vals):
+        assert len(input_vals) == 1
+
+        return [np.sum(input_vals[0], axis=node.op_params['axis'])]
+
+    def gradient(self, node: Node, output_grad):
+        return [output_grad * oneslike_op(node)]
+
 # Create global singletons of operators.
 add_op = AddOp()
 mul_op = MulOp()
@@ -287,6 +364,9 @@ matmul_op = MatMulOp()
 placeholder_op = PlaceholderOp()
 oneslike_op = OnesLikeOp()
 zeroslike_op = ZerosLikeOp()
+
+exp_op = ExpOp()
+log_op = LogOp()
 
 class Executor:
     """Executor computes values for a given subset of nodes in a computation graph."""
@@ -392,3 +472,7 @@ def sum_node_list(node_list: [Node]):
     from operator import add
     from functools import reduce
     return reduce(add, node_list)
+
+def cross_entropy(y, t, axis=0):
+    # TODO: implement
+    pass

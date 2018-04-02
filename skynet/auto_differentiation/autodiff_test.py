@@ -190,3 +190,39 @@ def test_matmul_two_vars():
     assert np.array_equal(y_val, expected_yval)
     assert np.array_equal(grad_x2_val, expected_grad_x2_val)
     assert np.array_equal(grad_x3_val, expected_grad_x3_val)
+
+def test_exp():
+    x1 = ad.Variable(name = "x1")
+    y = ad.exp_op(x1)
+
+    grad_x1, = ad.gradients(y, [x1])
+
+    executor = ad.Executor([y, grad_x1])
+
+    x1_val = 2 * np.ones(3)
+    y_val, grad_x1_val= executor.run(feed_dict = {x1 : x1_val})
+
+    expected_yval = np.exp(x1_val)
+    expected_grad_x1_val = expected_yval
+
+    assert isinstance(y, ad.Node)
+    assert np.array_equal(y_val, expected_yval)
+    assert np.array_equal(grad_x1_val, expected_grad_x1_val)
+
+def test_log():
+    x1 = ad.Variable(name = "x1")
+    y = ad.log_op(x1)
+
+    grad_x1, = ad.gradients(y, [x1])
+
+    executor = ad.Executor([y, grad_x1])
+
+    x1_val = 2 * np.ones(3)
+    y_val, grad_x1_val= executor.run(feed_dict = {x1 : x1_val})
+
+    expected_yval = np.log(x1_val)
+    expected_grad_x1_val = 1.0 / x1_val
+
+    assert isinstance(y, ad.Node)
+    assert np.array_equal(y_val, expected_yval)
+    assert np.array_equal(grad_x1_val, expected_grad_x1_val)
