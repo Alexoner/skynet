@@ -5,7 +5,7 @@ import numpy as np
 class BaseModel(object, metaclass=ABCMeta):
 
   def __init__(self, learning_rate=1e-3, reg=1e-5, num_iters=100,
-            batch_size=200, verbose=False, dtype=np.float32, is_regression=True):
+               batch_size=200, verbose=False, dtype=np.float32, is_regression=True):
     """
     Initialize a model.
 
